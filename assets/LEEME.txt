@@ -1,0 +1,39 @@
+CÓMO CAMBIAR LAS IMÁGENES DE LA APP
+===================================
+
+Reemplaza el archivo y ejecuta el comando de al lado. No hay que tocar código.
+
+  assets/logo.png
+      Logo que se ve DENTRO de la app (login, appbar, splash animado).
+      → PNG blanco con fondo transparente, cuadrado (1024x1024).
+        Se muestra siempre sobre una placa azul medianoche #041941.
+      → Comando: ninguno. Basta con: flutter run
+
+  assets/app_icon.png
+      Icono de la app en el teléfono.
+      → PNG cuadrado 1024x1024, SIN transparencia (fondo sólido).
+      → Comando: flutter pub run flutter_launcher_icons
+
+  assets/app_icon_foreground.png
+      Capa frontal del icono adaptativo de Android (el fondo lo pone
+      flutter_launcher_icons con el color #041941).
+      → PNG 1024x1024 con transparencia. Deja ~20% de margen: Android
+        recorta los bordes en círculo, cuadrado o gota según el teléfono.
+      → Comando: flutter pub run flutter_launcher_icons
+
+  assets/splash_logo.png
+      Pantalla de arranque nativa (antes de que cargue Flutter).
+      → PNG con transparencia, centrado, 1152x1152.
+      → Comando: dart run flutter_native_splash:create
+
+SECUENCIA COMPLETA después de cambiar imágenes:
+
+  flutter pub get
+  flutter pub run flutter_launcher_icons
+  dart run flutter_native_splash:create
+  flutter build apk --release
+
+COLORES DEL MANUAL DE IDENTIDAD
+  Azul Medianoche      #041941   (fondo del logo, siempre)
+  Azul Cielo Profundo  #00A4FF
+  Azul Cielo Claro     #99E0FF

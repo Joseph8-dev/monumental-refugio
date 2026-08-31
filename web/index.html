@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!--
+    $FLUTTER_BASE_HREF lo reemplaza `flutter build web --base-href`.
+    En GitHub Pages de proyecto la app vive en /<repositorio>/, así que
+    hay que compilar con  --base-href "/<repositorio>/"  o los archivos
+    no se encuentran y la página queda en blanco.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description"
+        content="Tablero administrativo del Refugio Transitorio Monumental">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+
+  <!-- Los datos del refugio no deben indexarse ni compartirse por enlace. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Refugio Monumental">
+  <meta name="theme-color" content="#041941">
+
+  <title>Refugio Transitorio Monumental</title>
+
+  <style>
+    /* Pantalla de carga con la identidad del estadio, para que el
+       arranque de Flutter no se vea como una página en blanco. */
+    html, body { height: 100%; margin: 0; padding: 0; background: #041941; }
+    #carga {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #041941; color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: opacity .4s ease;
+    }
+    #carga img { width: 132px; height: auto; margin-bottom: 26px; }
+    #carga p { margin: 0; font-size: 13px; letter-spacing: .5px; opacity: .75; }
+    .barra {
+      margin-top: 18px; width: 148px; height: 3px;
+      background: rgba(255,255,255,.18); border-radius: 3px; overflow: hidden;
+    }
+    .barra span {
+      display: block; width: 40%; height: 100%; background: #00A4FF;
+      border-radius: 3px; animation: correr 1.1s ease-in-out infinite;
+    }
+    @keyframes correr {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(320%); }
+    }
+  </style>
+</head>
+<body>
+  <div id="carga">
+    <img src="icons/Icon-512.png" alt="Refugio Transitorio Monumental">
+    <p>CARGANDO TABLERO</p>
+    <div class="barra"><span></span></div>
+  </div>
+
+  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Se retira la pantalla de carga cuando Flutter ya pintó.
+    window.addEventListener('flutter-first-frame', function () {
+      var c = document.getElementById('carga');
+      if (!c) return;
+      c.style.opacity = '0';
+      setTimeout(function () { c.remove(); }, 400);
+    });
+  </script>
+</body>
+</html>

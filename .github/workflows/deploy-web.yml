@@ -1,0 +1,77 @@
+# ═══════════════════════════════════════════════════════════
+# Publica el tablero administrativo en GitHub Pages.
+#
+# Cada push a main compila la app a web y la publica. Es la MISMA app
+# del APK: lo que se ve en el navegador nunca se desincroniza de la
+# tablet, porque sale del mismo código.
+#
+# Antes del primer despliegue, en el repositorio:
+#   Settings → Pages → Build and deployment → Source: GitHub Actions
+# ═══════════════════════════════════════════════════════════
+name: Publicar tablero web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Si se empujan dos commits seguidos, cancela el despliegue anterior.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Genera las carpetas de plataforma si el repo solo trae lib/ y web/.
+      # `flutter create` puede pisar web/index.html y web/manifest.json,
+      # que están personalizados con la identidad del estadio: se
+      # resguardan y se restauran después.
+      - name: Preparar proyecto
+        run: |
+          flutter --version
+          cp -r web /tmp/web-personalizado
+          flutter create --platforms=web --org ve.monumental --project-name refugio_petare .
+          cp -rf /tmp/web-personalizado/. web/
+          flutter pub get
+
+      # En GitHub Pages de proyecto la app vive en /<repositorio>/.
+      # Sin el base-href correcto la página carga en blanco.
+      - name: Compilar web
+        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+
+      # Evita que Pages procese la salida con Jekyll (ignora _archivos).
+      - name: Desactivar Jekyll
+        run: touch build/web/.nojekyll
+
+      # GitHub Pages no soporta rutas del lado del cliente: 404 → index
+      # para que recargar la página no rompa.
+      - name: Fallback de rutas
+        run: cp build/web/index.html build/web/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

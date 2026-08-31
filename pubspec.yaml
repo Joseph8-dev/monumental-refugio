@@ -1,0 +1,62 @@
+name: refugio_petare
+description: Refugio Transitorio Monumental - registro y control de damnificados.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Textos en español de los widgets de Material (selector de fechas, etc.)
+  flutter_localizations:
+    sdk: flutter
+  http: ^1.2.1
+  intl: any   # la versión la fija flutter_localizations
+  shared_preferences: ^2.2.3
+  image_picker: ^1.1.2
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter
+  # Generadores de icono y splash. Ver "Cambiar iconos" en el README.
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png
+    - assets/splash_logo.png
+    - assets/app_icon.png
+    - assets/app_icon_foreground.png
+
+# ═══════════════════════════════════════════════════════════
+# ICONO DE LA APP  ·  flutter pub run flutter_launcher_icons
+# Reemplaza assets/app_icon.png (1024x1024, sin transparencia) y ejecuta
+# el comando. Genera todos los tamaños de Android automáticamente.
+# ═══════════════════════════════════════════════════════════
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/app_icon.png"
+  # Icono adaptativo de Android: fondo azul medianoche + logo blanco.
+  adaptive_icon_background: "#041941"
+  adaptive_icon_foreground: "assets/app_icon_foreground.png"
+  min_sdk_android: 21
+
+# ═══════════════════════════════════════════════════════════
+# SPLASH  ·  dart run flutter_native_splash:create
+# Reemplaza assets/splash_logo.png y ejecuta el comando.
+# ═══════════════════════════════════════════════════════════
+flutter_native_splash:
+  color: "#041941"
+  image: assets/splash_logo.png
+  android_12:
+    color: "#041941"
+    image: assets/splash_logo.png
+  android: true
+  ios: false
