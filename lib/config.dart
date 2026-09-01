@@ -18,5 +18,5 @@ class AppConfig {
       };
 
   /// Nombre visible de la app (pendiente de cambio).
-  static const String appName = 'Refugio Transitorio Monumental';
+  static const String appName = 'Campamento Temporal Monumental';
 }

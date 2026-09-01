@@ -9,7 +9,7 @@ import '../widgets/bitacora_panel.dart';
 import '../widgets/tabla_familias.dart';
 import 'login_screen.dart';
 
-/// Tablero administrativo del Refugio Transitorio Monumental.
+/// Tablero administrativo del Campamento Temporal Monumental.
 /// Métricas: total de damnificados, urgencia, tenencia de vivienda,
 /// patologías, ocupación por cubículo y comidas del día.
 class DashboardScreen extends StatefulWidget {

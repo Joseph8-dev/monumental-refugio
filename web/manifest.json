@@ -1,11 +1,11 @@
 {
-    "name": "Refugio Transitorio Monumental",
+    "name": "Campamento Temporal Monumental",
     "short_name": "Refugio Monumental",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#041941",
     "theme_color": "#041941",
-    "description": "Tablero administrativo del Refugio Transitorio Monumental",
+    "description": "Tablero administrativo del Campamento Temporal Monumental",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

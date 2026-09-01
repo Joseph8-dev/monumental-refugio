@@ -1,6 +1,6 @@
-# Refugio Transitorio Monumental
+# Campamento Temporal Monumental
 
-Registro y control de damnificados del Refugio Transitorio Monumental
+Registro y control de damnificados del Campamento Temporal Monumental
 (Estadio Monumental Simón Bolívar, Caracas).
 
 Una sola base de código para dos usos:

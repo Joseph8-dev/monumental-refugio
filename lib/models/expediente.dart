@@ -60,12 +60,12 @@ class Catalogos {
   /// Lista de respaldo si el servidor no responde. La lista real se obtiene
   /// de GET /api/refugio/refugios (tabla rf_refugios) al abrir el asistente.
   static const refugios = [
-    'Refugio Transitorio Monumental',
+    'Campamento Temporal Monumental',
     'Otros',
   ];
 
   /// Refugio preseleccionado al abrir un registro nuevo.
-  static const refugioPorDefecto = 'Refugio Transitorio Monumental';
+  static const refugioPorDefecto = 'Campamento Temporal Monumental';
 
   static const sexos = ['Masculino', 'Femenino', 'Otro', 'Prefiere no indicar'];
   static const nacionalidades = ['Venezolana', 'Extranjera'];
