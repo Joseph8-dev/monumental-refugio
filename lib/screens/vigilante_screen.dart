@@ -9,6 +9,7 @@ import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/bitacora_form.dart';
+import '../widgets/bitacora_hoy.dart';
 import '../widgets/form_widgets.dart';
 import 'login_screen.dart';
 
@@ -42,6 +43,8 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
 
   /// Volver al inicio de la lista (mismo gesto que en Expedientes).
   final _scroll = ScrollController();
+  final _claveBitacora = GlobalKey<BitacoraHoyState>();
+  bool _bitacoraPlegada = false;
   bool _arriba = true;
 
   @override
@@ -57,6 +60,18 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
     _scroll.addListener(() {
       final arriba = _scroll.offset < 300;
       if (arriba != _arriba) setState(() => _arriba = arriba);
+
+      // El bloque de bitácora se pliega al bajar, para dejarle la
+      // pantalla a las familias, y solo vuelve al llegar arriba del todo.
+      //
+      // Depende únicamente de la posición, no de la dirección: mirando la
+      // dirección el bloque aparecía y desaparecía solo, porque al soltar
+      // el dedo o al rebotar la lista el gesto pasa a 'forward' un
+      // instante aunque el usuario no haya subido nada.
+      final plegada = _scroll.offset > 90;
+      if (plegada != _bitacoraPlegada) {
+        setState(() => _bitacoraPlegada = plegada);
+      }
     });
     _cargar();
   }
@@ -167,6 +182,7 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
       familia: x,
     );
     if (!ok || !mounted) return;
+    _claveBitacora.currentState?.cargar();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Ayuda registrada para ${x.nombreResponsable}'),
       backgroundColor: AppColors.ok,
@@ -241,24 +257,24 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
                 Text('Control de acceso y comidas · $hoy',
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, color: AppColors.ink)),
-                // Bitácora del turno: lo primero, porque es lo que el
-                // vigilante registra sin buscar a nadie.
-                Row(
-                  children: [
-                    _BotonBitacora(
-                      tipo: TipoBitacora.actividad,
-                      etiqueta: 'Actividad',
-                      onListo: _cargar,
-                    ),
-                    const SizedBox(width: 8),
-                    _BotonBitacora(
-                      tipo: TipoBitacora.incidencia,
-                      etiqueta: 'Incidencia / Novedad',
-                      onListo: _cargar,
-                    ),
-                  ],
+                // Bitácora del turno, con lo ya registrado hoy a la
+                // vista para no duplicar entre turnos. Se pliega al
+                // desplazarse hacia abajo.
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  alignment: Alignment.topCenter,
+                  child: _bitacoraPlegada
+                      ? const SizedBox(width: double.infinity)
+                      : Column(
+                          children: [
+                            BitacoraHoy(
+                                key: _claveBitacora, onCambio: _cargar),
+                            const Divider(height: 20),
+                          ],
+                        ),
                 ),
-                const Divider(height: 22),
+                const SizedBox(height: 4),
                 Text(
                     'Vigilante: $_operador · $dentro dentro del refugio'
                     '${filtrando ? " · ${visibles.length} en el filtro" : ""}',
@@ -386,7 +402,7 @@ class _TarjetaVigilante extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: dentro ? AppColors.ok.withOpacity(.45) : AppColors.line,
+            color: dentro ? AppColors.ok.withValues(alpha: .45) : AppColors.line,
             width: dentro ? 1.4 : 1),
       ),
       child: Column(
@@ -418,8 +434,8 @@ class _TarjetaVigilante extends StatelessWidget {
                       horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
                     color: dentro
-                        ? AppColors.ok.withOpacity(.12)
-                        : AppColors.line.withOpacity(.6),
+                        ? AppColors.ok.withValues(alpha: .12)
+                        : AppColors.line.withValues(alpha: .6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(dentro ? 'DENTRO' : 'FUERA',
@@ -492,7 +508,7 @@ class _TarjetaVigilante extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 9),
                 foregroundColor: AppColors.ok,
-                side: BorderSide(color: AppColors.ok.withOpacity(.45)),
+                side: BorderSide(color: AppColors.ok.withValues(alpha: .45)),
               ),
               icon: const Icon(Icons.volunteer_activism_outlined, size: 17),
               label: const Text('Registrar ayuda socioeconómica',
@@ -575,50 +591,6 @@ class _Estado extends StatelessWidget {
             OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
           ],
         ],
-      ),
-    );
-  }
-}
-
-
-/// Botón de registro de bitácora. Abre el formulario y avisa al volver.
-class _BotonBitacora extends StatelessWidget {
-  final String tipo;
-  final String etiqueta;
-  final VoidCallback onListo;
-  const _BotonBitacora(
-      {required this.tipo, required this.etiqueta, required this.onListo});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = colorTipoBitacora(tipo);
-    return Expanded(
-      child: OutlinedButton(
-        onPressed: () async {
-          final ok = await mostrarFormularioBitacora(context, tipo: tipo);
-          if (!ok || !context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('${TipoBitacora.etiqueta(tipo)} registrada'),
-            backgroundColor: color,
-            duration: const Duration(seconds: 2),
-          ));
-          onListo();
-        },
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          side: BorderSide(color: color.withOpacity(.5)),
-          foregroundColor: color,
-        ),
-        child: Column(
-          children: [
-            Icon(iconoTipoBitacora(tipo), size: 19),
-            const SizedBox(height: 3),
-            Text(etiqueta,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.w600)),
-          ],
-        ),
       ),
     );
   }

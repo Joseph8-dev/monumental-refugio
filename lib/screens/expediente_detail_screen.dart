@@ -50,7 +50,7 @@ class _ExpedienteDetailScreenState extends State<ExpedienteDetailScreen> {
           builder: (_) =>
               WizardScreen(existente: exp, operador: widget.operador)),
     );
-    if (res != null) {
+    if (res != null && mounted) {
       _changed = true;
       setState(() => exp = res);
     }

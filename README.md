@@ -161,3 +161,14 @@ se supera, el tablero lo indica pero nada bloquea el registro.
 python3 verificar.py    # imports, duplicados, balance de llaves
 flutter analyze
 ```
+
+## Liberación de recursos
+
+`verificar.py` revisa también que cada `State` suelte lo que crea:
+controladores de texto, scroll, animación, pestañas, foco y página, y los
+temporizadores. Igualmente que todo `addListener` tenga su
+`removeListener` y que `dispose()` llame a `super.dispose()`.
+
+Del lado del servidor, los contadores de intentos fallidos se purgan cada
+10 minutos y la cola de reportes tiene tope de 10 trabajos, con
+descarte de pedidos repetidos.

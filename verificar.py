@@ -104,6 +104,46 @@ for ruta, texto in por_archivo.items():
             if n > 1:
                 problemas.append(f'DUPLICADO    {ruta}: {c.group(1)}.{nombre} x{n}')
 
+# ── 5. recursos sin liberar ─────────────────────────────────
+# Controladores y temporizadores que se crean en un State y no se sueltan
+# en dispose(): la pantalla se cierra pero el recurso sigue vivo.
+RECURSOS = {
+    r'TextEditingController\(': 'dispose',
+    r'ScrollController\(': 'dispose',
+    r'AnimationController\(': 'dispose',
+    r'TabController\(': 'dispose',
+    r'FocusNode\(': 'dispose',
+    r'PageController\(': 'dispose',
+    r'Timer\(': 'cancel',
+    r'Timer\.periodic\(': 'cancel',
+}
+
+for ruta, texto in por_archivo.items():
+    clases = list(re.finditer(r'class (\w*State\w*) extends State<', texto))
+    for i, c in enumerate(clases):
+        fin = clases[i + 1].start() if i + 1 < len(clases) else len(texto)
+        cuerpo = texto[c.start():fin]
+        nombre = c.group(1)
+
+        hay = 'void dispose()' in cuerpo
+        disp = cuerpo[cuerpo.index('void dispose()'):] if hay else ''
+
+        for patron, metodo in RECURSOS.items():
+            for m in re.finditer(r'(_\w+)\s*=\s*[^;]*' + patron, cuerpo):
+                campo = m.group(1)
+                # Acepta tanto campo.metodo() como campo?.metodo()
+                if not re.search(re.escape(campo) + r'\??\.' + metodo + r'\(', disp):
+                    problemas.append(
+                        f'SIN LIBERAR  {ruta}: {nombre}.{campo} no llama a {metodo}()')
+
+        if re.search(r'\w[\w.]*\.addListener\(', cuerpo):
+            if not re.search(r'removeListener|dejarDeEscuchar', disp):
+                problemas.append(
+                    f'SIN LIBERAR  {ruta}: {nombre} agrega un listener y no lo quita')
+
+        if hay and 'super.dispose()' not in disp:
+            problemas.append(f'SIN LIBERAR  {ruta}: {nombre} no llama a super.dispose()')
+
 if problemas:
     print('\n'.join(sorted(set(problemas))))
     sys.exit(1)

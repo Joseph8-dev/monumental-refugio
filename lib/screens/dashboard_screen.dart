@@ -4,7 +4,6 @@ import '../datos.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets/app_logo.dart';
-import '../widgets/form_widgets.dart';
 import '../widgets/reportes_card.dart';
 import '../widgets/bitacora_panel.dart';
 import '../widgets/tabla_familias.dart';
@@ -35,6 +34,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Para poder bajar hasta la lista de familias al tocar una patología.
   final _scroll = ScrollController();
   final _claveFamilias = GlobalKey();
+  int _intentoScroll = 0;
+  bool _scrollLogrado = false;
 
   @override
   void initState() {
@@ -80,17 +81,43 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   /// Lleva la vista hasta la lista de familias, para que al tocar una
   /// patología se vea de una vez a quiénes corresponde.
+  /// Lleva la vista hasta la tabla de familias.
+  ///
+  /// Se intenta varias veces porque al tocar una patología la tabla pide
+  /// los datos al servidor: en el primer intento todavía no existe —la
+  /// lista construye por partes— y su altura cambia cuando llegan las
+  /// filas, así que un solo desplazamiento se queda corto.
   void _irAFamilias() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _claveFamilias.currentContext;
-      if (ctx == null) return;
-      Scrollable.ensureVisible(
-        ctx,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOutCubic,
-        alignment: 0.05,
-      );
-    });
+    // Identifica esta petición: si el usuario toca otra patología, los
+    // intentos pendientes de la anterior se descartan.
+    final intento = ++_intentoScroll;
+
+    for (final ms in const [60, 350, 800, 1400]) {
+      Future.delayed(Duration(milliseconds: ms), () {
+        if (!mounted || !_scroll.hasClients) return;
+        if (intento != _intentoScroll || _scrollLogrado) return;
+
+        final ctx = _claveFamilias.currentContext;
+        if (ctx != null) {
+          _scrollLogrado = true;
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 420),
+            curve: Curves.easeOutCubic,
+            alignment: 0.02,
+          );
+          return;
+        }
+
+        // Aún no construida: la tabla es el último bloque, así que
+        // bajar del todo la deja en pantalla.
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
+      });
+    }
   }
 
   Future<void> _salir() async {
@@ -338,6 +365,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           onTocar: (etiqueta) {
             filtroPatologia.value =
                 filtroPatologia.value == etiqueta ? '' : etiqueta;
+            _scrollLogrado = false;
             _irAFamilias();
           },
         ),
@@ -378,6 +406,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         final dosColumnas = c.maxWidth >= 980;
         if (!dosColumnas) {
           return ListView(
+            controller: _scroll,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: bloques
                 .map((b) => Padding(
@@ -400,6 +429,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         }
 
         return SingleChildScrollView(
+          controller: _scroll,
           padding: const EdgeInsets.fromLTRB(24, 18, 24, 36),
           child: Center(
             child: ConstrainedBox(
@@ -580,7 +610,7 @@ class _Barras extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: seleccionada
-                        ? AppColors.warning.withOpacity(.10)
+                        ? AppColors.warning.withValues(alpha: .10)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),

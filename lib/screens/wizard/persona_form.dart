@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/expediente.dart';
-import '../../theme.dart';
 import '../../widgets/form_widgets.dart';
 
 /// Formulario de UNA PERSONA — equivale a una fila del Excel del censo.

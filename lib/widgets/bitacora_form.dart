@@ -156,7 +156,7 @@ class _FormularioBitacoraState extends State<_FormularioBitacora> {
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(.12),
+                    color: color.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(iconoTipoBitacora(widget.tipo),
@@ -201,7 +201,7 @@ class _FormularioBitacoraState extends State<_FormularioBitacora> {
               onChanged: (v) => _descripcion = v,
             ),
             AppTextField(
-              label: 'Observación',
+              label: 'Observaciones extra',
               value: _observacion,
               maxLines: 2,
               hint: 'Opcional: algo que deba tener en cuenta la coordinación',

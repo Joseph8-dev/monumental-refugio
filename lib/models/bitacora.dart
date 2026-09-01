@@ -1,6 +1,7 @@
 /// Lo que el vigilante registra en su turno: actividades del refugio,
 /// incidencias y novedades de ayudas socioeconómicas. Comparten forma
 /// para que el tablero las liste juntas en orden cronológico.
+library;
 
 class TipoBitacora {
   static const actividad = 'actividad';

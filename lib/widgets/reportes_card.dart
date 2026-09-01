@@ -15,11 +15,22 @@ class ReportesCard extends StatefulWidget {
 }
 
 class _ReportesCardState extends State<ReportesCard> {
+  // Última semana por defecto: es el corte con el que se revisa el
+  // refugio. Para un periodo mayor se elige a mano en el calendario.
   late DateTimeRange _rango = DateTimeRange(
-    start: DateTime.now().subtract(const Duration(days: 29)),
+    start: DateTime.now().subtract(const Duration(days: 6)),
     end: DateTime.now(),
   );
   String? _enviando;
+
+  void _fijarDias(int dias) {
+    setState(() {
+      _rango = DateTimeRange(
+        start: DateTime.now().subtract(Duration(days: dias)),
+        end: DateTime.now(),
+      );
+    });
+  }
 
   Future<void> _elegirRango() async {
     final r = await showDateRangePicker(
@@ -31,7 +42,7 @@ class _ReportesCardState extends State<ReportesCard> {
       helpText: 'Periodo del reporte',
       saveText: 'Aplicar',
     );
-    if (r != null) setState(() => _rango = r);
+    if (r != null && mounted) setState(() => _rango = r);
   }
 
   Future<void> _enviar(String tipo, String nombre) async {
@@ -119,7 +130,29 @@ class _ReportesCardState extends State<ReportesCard> {
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _Atajo(
+                  etiqueta: 'Esta semana',
+                  dias: 6,
+                  rango: _rango,
+                  onTap: _fijarDias),
+              _Atajo(
+                  etiqueta: 'Últimos 15 días',
+                  dias: 14,
+                  rango: _rango,
+                  onTap: _fijarDias),
+              _Atajo(
+                  etiqueta: 'Último mes',
+                  dias: 29,
+                  rango: _rango,
+                  onTap: _fijarDias),
+            ],
+          ),
+          const SizedBox(height: 16),
 
           _Boton(
             icono: Icons.picture_as_pdf_outlined,
@@ -184,7 +217,7 @@ class _Boton extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(.10),
+                color: color.withValues(alpha: .10),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icono, size: 19, color: color),
@@ -215,6 +248,41 @@ class _Boton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+/// Atajo de periodo. Se marca cuando el rango elegido coincide.
+class _Atajo extends StatelessWidget {
+  final String etiqueta;
+  final int dias;
+  final DateTimeRange rango;
+  final void Function(int) onTap;
+  const _Atajo({
+    required this.etiqueta,
+    required this.dias,
+    required this.rango,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final activo = rango.duration.inDays == dias &&
+        DateTime.now().difference(rango.end).inDays == 0;
+    return ChoiceChip(
+      label: Text(etiqueta,
+          style: TextStyle(
+              fontSize: 12,
+              color: activo ? AppColors.blue : AppColors.gray,
+              fontWeight: activo ? FontWeight.w700 : FontWeight.w500)),
+      selected: activo,
+      showCheckmark: false,
+      backgroundColor: Colors.white,
+      selectedColor: AppColors.blueSoft,
+      side: BorderSide(color: activo ? AppColors.blue : AppColors.line),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      onSelected: (_) => onTap(dias),
     );
   }
 }

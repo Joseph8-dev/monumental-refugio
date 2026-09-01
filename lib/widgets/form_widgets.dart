@@ -456,7 +456,7 @@ class Badge2 extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         // ignore: deprecated_member_use
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(text,
@@ -509,9 +509,9 @@ class AlertaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(.10),
+        color: color.withValues(alpha: .10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(.35)),
+        border: Border.all(color: color.withValues(alpha: .35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -569,7 +569,7 @@ class FiltroChip extends StatelessWidget {
         selected: activo,
         showCheckmark: false,
         backgroundColor: Colors.white,
-        selectedColor: color.withOpacity(.12),
+        selectedColor: color.withValues(alpha: .12),
         side: BorderSide(color: activo ? color : AppColors.line),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),

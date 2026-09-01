@@ -1453,7 +1453,7 @@ class _ArticuloSheetState extends State<_ArticuloSheet> {
   Future<void> _foto() async {
     final b64 =
         await pickImageB64(context, title: 'Foto del artículo');
-    if (b64 != null) setState(() => a.fotoBase64 = b64);
+    if (b64 != null && mounted) setState(() => a.fotoBase64 = b64);
   }
 
   @override

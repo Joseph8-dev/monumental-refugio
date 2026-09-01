@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// El operador ya no se pregunta: es el usuario que inició sesión.
   Future<void> _loadOperador() async {
     final sp = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() =>
         _operador = sp.getString('operador') ?? Permisos.etiquetaRol);
   }

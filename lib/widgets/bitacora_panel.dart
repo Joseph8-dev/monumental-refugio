@@ -136,7 +136,7 @@ class _BitacoraPanelState extends State<BitacoraPanel> {
                         padding: const EdgeInsets.symmetric(vertical: 11),
                         foregroundColor: colorTipoBitacora(t),
                         side: BorderSide(
-                            color: colorTipoBitacora(t).withOpacity(.5)),
+                            color: colorTipoBitacora(t).withValues(alpha: .5)),
                       ),
                       icon: Icon(iconoTipoBitacora(t), size: 17),
                       label: Text(
@@ -308,7 +308,7 @@ class _Tarjeta extends StatelessWidget {
             padding: const EdgeInsets.all(7),
             margin: const EdgeInsets.only(right: 11),
             decoration: BoxDecoration(
-              color: color.withOpacity(.12),
+              color: color.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(iconoTipoBitacora(r.tipo), size: 17, color: color),

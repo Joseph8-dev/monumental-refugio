@@ -90,6 +90,12 @@ class _WizardScreenState extends State<WizardScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _page.dispose();
+    super.dispose();
+  }
+
   void _refresh() => setState(() {});
 
   /// true si el valor de un TriChoice fue respondido (si/no/ns).

@@ -186,6 +186,10 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                   )),
             ],
           ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 14),
+
           // Filtro llegado desde el tablero de patologías.
           if (filtroPatologia.value.isNotEmpty)
             Padding(
@@ -194,9 +198,9 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(.10),
+                  color: AppColors.warning.withValues(alpha: .10),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.warning.withOpacity(.4)),
+                  border: Border.all(color: AppColors.warning.withValues(alpha: .4)),
                 ),
                 child: Row(
                   children: [
@@ -352,23 +356,41 @@ class _FilaState extends State<_Fila> {
             color: _hover ? AppColors.blueSoft : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Row(
+          // En pantalla ancha va todo en una fila con columnas; en el
+          // teléfono no cabe (el nombre se corta y el cubículo se parte
+          // en vertical), así que se apila en dos líneas.
+          child: LayoutBuilder(
+            builder: (context, c) => c.maxWidth < 560
+                ? _compacta(e, color, alertas)
+                : _amplia(e, color, alertas),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Teléfono: nombre arriba, datos y alertas debajo.
+  Widget _compacta(Expediente e, Color color, List<Alerta> alertas) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 4,
+          height: 44,
+          margin: const EdgeInsets.only(right: 10, top: 2),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 5,
-                height: 34,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
                       e.nombreResponsable.isEmpty
                           ? e.codigo
                           : e.nombreResponsable,
@@ -377,29 +399,33 @@ class _FilaState extends State<_Fila> {
                       style: const TextStyle(
                           fontSize: 13.5, fontWeight: FontWeight.w600),
                     ),
-                    Text(e.responsable['cedula']?.toString() ?? '—',
-                        style: const TextStyle(
-                            fontSize: 11.5, color: AppColors.gray)),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(e.prioridad,
+                      style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: color)),
+                ],
               ),
-              Expanded(
-                child: Text(
-                  '${e.censo['apto'] ?? '—'}',
-                  style: const TextStyle(fontSize: 12.5),
-                ),
+              const SizedBox(height: 2),
+              Text(
+                [
+                  'Cubículo ${e.censo['apto'] ?? '—'}',
+                  '${e.totalPersonas} pers.',
+                  if ((e.responsable['cedula'] ?? '').toString().isNotEmpty)
+                    '${e.responsable['cedula']}',
+                ].join('  ·  '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11.5, color: AppColors.gray),
               ),
-              Expanded(
-                child: Text('${e.totalPersonas} pers.',
-                    style: const TextStyle(fontSize: 12.5)),
-              ),
-              // Alertas: mismos iconos que en el teléfono.
-              SizedBox(
-                width: 92,
-                child: Wrap(
-                  spacing: 4,
+              if (alertas.isNotEmpty) ...[
+                const SizedBox(height: 5),
+                Wrap(
+                  spacing: 6,
                   children: alertas
-                      .take(4)
+                      .take(6)
                       .map((a) => Icon(iconoDeAlerta(a.clase),
                           size: 14,
                           color: a.esPendiente
@@ -407,21 +433,84 @@ class _FilaState extends State<_Fila> {
                               : AppColors.blue))
                       .toList(),
                 ),
-              ),
-              SizedBox(
-                width: 78,
-                child: Text(e.prioridad,
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: color)),
-              ),
-              const Icon(Icons.open_in_new,
-                  size: 15, color: AppColors.grayLight),
+              ],
             ],
           ),
         ),
-      ),
+        const Padding(
+          padding: EdgeInsets.only(left: 6, top: 2),
+          child: Icon(Icons.chevron_right, size: 18, color: AppColors.grayLight),
+        ),
+      ],
+    );
+  }
+
+  /// Escritorio: columnas alineadas, como una tabla.
+  Widget _amplia(Expediente e, Color color, List<Alerta> alertas) {
+    return Row(
+      children: [
+        Container(
+          width: 5,
+          height: 34,
+          margin: const EdgeInsets.only(right: 12),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                e.nombreResponsable.isEmpty ? e.codigo : e.nombreResponsable,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 13.5, fontWeight: FontWeight.w600),
+              ),
+              Text(e.responsable['cedula']?.toString() ?? '—',
+                  style: const TextStyle(
+                      fontSize: 11.5, color: AppColors.gray)),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Text('${e.censo['apto'] ?? '—'}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5)),
+        ),
+        Expanded(
+          child: Text('${e.totalPersonas} pers.',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5)),
+        ),
+        SizedBox(
+          width: 92,
+          child: Wrap(
+            spacing: 4,
+            children: alertas
+                .take(4)
+                .map((a) => Icon(iconoDeAlerta(a.clase),
+                    size: 14,
+                    color:
+                        a.esPendiente ? AppColors.warning : AppColors.blue))
+                .toList(),
+          ),
+        ),
+        SizedBox(
+          width: 78,
+          child: Text(e.prioridad,
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: color)),
+        ),
+        const Icon(Icons.open_in_new, size: 15, color: AppColors.grayLight),
+      ],
     );
   }
 }
