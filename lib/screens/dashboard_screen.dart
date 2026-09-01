@@ -43,12 +43,16 @@ class _DashboardScreenState extends State<DashboardScreen>
     // El tablero vive dentro de un IndexedStack: no se reconstruye al
     // cambiar de pestaña, así que necesita escuchar los cambios.
     _suscripcion = Datos.escuchar('tablero', _cargar);
+    // Las barras marcan la patología activa, así que tienen que
+    // redibujarse también cuando el filtro se quita desde la tabla.
+    Datos.filtroPatologia.addListener(_alCambiarFiltro);
     _cargar();
   }
 
   @override
   void dispose() {
     Datos.dejarDeEscuchar(_suscripcion);
+    Datos.filtroPatologia.removeListener(_alCambiarFiltro);
     _tabs.dispose();
     _scroll.dispose();
     _anim.dispose();
@@ -78,6 +82,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   int _i(dynamic v) => v is int ? v : int.tryParse('${v ?? 0}') ?? 0;
+
+  void _alCambiarFiltro() {
+    if (mounted) setState(() {});
+  }
 
   /// Lleva la vista hasta la lista de familias, para que al tocar una
   /// patología se vea de una vez a quiénes corresponde.
@@ -363,8 +371,8 @@ class _DashboardScreenState extends State<DashboardScreen>
           // baja hasta ella: el admin pasa del número a los nombres sin
           // tener que buscarlos.
           onTocar: (etiqueta) {
-            filtroPatologia.value =
-                filtroPatologia.value == etiqueta ? '' : etiqueta;
+            Datos.filtroPatologia.value =
+                Datos.filtroPatologia.value == etiqueta ? '' : etiqueta;
             _scrollLogrado = false;
             _irAFamilias();
           },
@@ -564,7 +572,7 @@ class _Barras extends StatelessWidget {
             ),
           ...entradas.map((e) {
             final color = colores[e.key] ?? AppColors.blue;
-            final seleccionada = filtroPatologia.value == e.key;
+            final seleccionada = Datos.filtroPatologia.value == e.key;
             final fila = Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Column(

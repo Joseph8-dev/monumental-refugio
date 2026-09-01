@@ -10,6 +10,17 @@ class Datos {
   /// Se incrementa con cada cambio. Las pantallas lo escuchan.
   static final ValueNotifier<int> version = ValueNotifier<int>(0);
 
+  /// Patología por la que se está filtrando la lista de familias. Vive
+  /// aquí y no en la tabla porque hay que limpiarla al cerrar sesión:
+  /// de lo contrario reaparecía marcada en la sesión siguiente.
+  static final ValueNotifier<String> filtroPatologia =
+      ValueNotifier<String>('');
+
+  /// Limpia el estado que no debe sobrevivir a un cambio de usuario.
+  static void limpiarSesion() {
+    filtroPatologia.value = '';
+  }
+
   /// Quién hizo el último cambio ('lista', 'detalle', 'acceso', 'wizard').
   static String ultimoOrigen = '';
 

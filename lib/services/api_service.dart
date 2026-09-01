@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
+import '../datos.dart';
 import '../models/bitacora.dart';
 import '../models/expediente.dart';
 
@@ -47,6 +48,7 @@ class ApiService {
     if (token.isEmpty) return; // ya se estaba manejando
     token = '';
     rol = 'recolector';
+    Datos.limpiarSesion();
     SharedPreferences.getInstance().then((sp) {
       sp.setBool('rf_logged_in', false);
       sp.remove('rf_token');
@@ -58,6 +60,7 @@ class ApiService {
   static Future<void> limpiarToken() async {
     token = '';
     rol = 'recolector';
+    Datos.limpiarSesion();
     final sp = await SharedPreferences.getInstance();
     await sp.remove('rf_token');
     await sp.remove('rf_rol');

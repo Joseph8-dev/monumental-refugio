@@ -11,12 +11,6 @@ import 'form_widgets.dart';
 /// En el teléfono el listado completo vive en su propia pantalla; en el
 /// navegador no hay pestañas, así que el tablero necesita poder recorrer
 /// todas las familias sin traerlas de golpe: se piden de a 10 al servidor.
-/// Filtro de patología compartido con el tablero: al tocar una barra de
-/// "Patologías" se escribe aquí y la tabla se recarga sola. Un notifier
-/// en vez de pasarlo por constructor porque el widget que lo enciende
-/// está en otra rama del árbol.
-final ValueNotifier<String> filtroPatologia = ValueNotifier<String>('');
-
 class TablaFamilias extends StatefulWidget {
   const TablaFamilias({super.key});
 
@@ -44,14 +38,14 @@ class _TablaFamiliasState extends State<TablaFamilias> {
   void initState() {
     super.initState();
     _suscripcion = Datos.escuchar('tablero', _cargar);
-    filtroPatologia.addListener(_porPatologia);
+    Datos.filtroPatologia.addListener(_porPatologia);
     _cargar();
   }
 
   @override
   void dispose() {
     Datos.dejarDeEscuchar(_suscripcion);
-    filtroPatologia.removeListener(_porPatologia);
+    Datos.filtroPatologia.removeListener(_porPatologia);
     _campoBusqueda.dispose();
     super.dispose();
   }
@@ -72,7 +66,7 @@ class _TablaFamiliasState extends State<TablaFamilias> {
       final r = await ApiService.instance.listarPagina(
         search: _busqueda,
         prioridad: _prioridad,
-        patologia: filtroPatologia.value,
+        patologia: Datos.filtroPatologia.value,
         limit: _porPagina,
         offset: _pagina * _porPagina,
       );
@@ -139,7 +133,7 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                   // Deja claro si el total responde a un filtro activo.
                   _prioridad.isEmpty &&
                           _busqueda.isEmpty &&
-                          filtroPatologia.value.isEmpty
+                          Datos.filtroPatologia.value.isEmpty
                       ? '$desde–$hasta de $_total'
                       : '$desde–$hasta de $_total filtradas',
                   style: const TextStyle(fontSize: 12, color: AppColors.gray),
@@ -191,7 +185,7 @@ class _TablaFamiliasState extends State<TablaFamilias> {
           const SizedBox(height: 14),
 
           // Filtro llegado desde el tablero de patologías.
-          if (filtroPatologia.value.isNotEmpty)
+          if (Datos.filtroPatologia.value.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Container(
@@ -209,7 +203,7 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Mostrando familias con: ${filtroPatologia.value}',
+                        'Mostrando familias con: ${Datos.filtroPatologia.value}',
                         style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
@@ -217,7 +211,7 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                       ),
                     ),
                     InkWell(
-                      onTap: () => filtroPatologia.value = '',
+                      onTap: () => Datos.filtroPatologia.value = '',
                       child: const Icon(Icons.close,
                           size: 17, color: AppColors.warning),
                     ),
@@ -257,14 +251,14 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                         style: TextStyle(color: AppColors.gray)),
                     if (_prioridad.isNotEmpty ||
                         _busqueda.isNotEmpty ||
-                        filtroPatologia.value.isNotEmpty) ...[
+                        Datos.filtroPatologia.value.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       TextButton.icon(
                         onPressed: () => _filtrar(() {
                           _prioridad = '';
                           _busqueda = '';
                           _campoBusqueda.clear();
-                          filtroPatologia.value = '';
+                          Datos.filtroPatologia.value = '';
                         }),
                         icon: const Icon(Icons.filter_alt_off_outlined,
                             size: 17),
