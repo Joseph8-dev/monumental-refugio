@@ -4,11 +4,9 @@ import '../../theme.dart';
 import '../../widgets/form_widgets.dart';
 
 /// Formulario de UNA PERSONA — equivale a una fila del Excel del censo.
-///
 /// Se usa igual para el jefe/a de familia y para cada integrante, porque el
 /// censo los trata idénticamente. Trabaja sobre un Map para poder editar
 /// tanto `expediente.responsable` como cada acompañante sin duplicar código.
-///
 /// Claves (mismas que guarda el importador):
 ///   nombres · apellidos · cedula · fecha_nacimiento · edad · sexo
 ///   parentesco · condicion_salud · tipo_sangre · telefono · email

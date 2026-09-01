@@ -72,14 +72,15 @@ class _LoginScreenState extends State<LoginScreen>
     try {
       final nombre = await ApiService.instance.login(u, c);
 
-      // El tablero web es solo para administradores.
+      // Comprobación secundaria: el servidor ya rechaza a quien no tenga
+      // acceso web habilitado (devuelve 403). Esto solo evita mostrar un
+      // tablero vacío si alguna vez el rol no encaja.
       if (!Plataforma.rolPermitido(ApiService.rol)) {
         await ApiService.limpiarToken();
         if (!mounted) return;
         setState(() {
           _cargando = false;
-          _error = 'Este tablero es solo para administradores. '
-              'Use la aplicación móvil con su perfil.';
+          _error = 'Este tablero es solo para administradores.';
         });
         _shake.forward(from: 0);
         return;

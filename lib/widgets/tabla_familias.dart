@@ -8,10 +8,15 @@ import 'ficha.dart';
 import 'form_widgets.dart';
 
 /// Tabla de familias con paginación, para el tablero web.
-///
 /// En el teléfono el listado completo vive en su propia pantalla; en el
 /// navegador no hay pestañas, así que el tablero necesita poder recorrer
 /// todas las familias sin traerlas de golpe: se piden de a 10 al servidor.
+/// Filtro de patología compartido con el tablero: al tocar una barra de
+/// "Patologías" se escribe aquí y la tabla se recarga sola. Un notifier
+/// en vez de pasarlo por constructor porque el widget que lo enciende
+/// está en otra rama del árbol.
+final ValueNotifier<String> filtroPatologia = ValueNotifier<String>('');
+
 class TablaFamilias extends StatefulWidget {
   const TablaFamilias({super.key});
 
@@ -39,14 +44,21 @@ class _TablaFamiliasState extends State<TablaFamilias> {
   void initState() {
     super.initState();
     _suscripcion = Datos.escuchar('tablero', _cargar);
+    filtroPatologia.addListener(_porPatologia);
     _cargar();
   }
 
   @override
   void dispose() {
     Datos.dejarDeEscuchar(_suscripcion);
+    filtroPatologia.removeListener(_porPatologia);
     _campoBusqueda.dispose();
     super.dispose();
+  }
+
+  void _porPatologia() {
+    setState(() => _pagina = 0);
+    _cargar();
   }
 
   int get _paginas => _total == 0 ? 1 : ((_total - 1) ~/ _porPagina) + 1;
@@ -60,6 +72,7 @@ class _TablaFamiliasState extends State<TablaFamilias> {
       final r = await ApiService.instance.listarPagina(
         search: _busqueda,
         prioridad: _prioridad,
+        patologia: filtroPatologia.value,
         limit: _porPagina,
         offset: _pagina * _porPagina,
       );
@@ -124,7 +137,9 @@ class _TablaFamiliasState extends State<TablaFamilias> {
               if (_total > 0)
                 Text(
                   // Deja claro si el total responde a un filtro activo.
-                  _prioridad.isEmpty && _busqueda.isEmpty
+                  _prioridad.isEmpty &&
+                          _busqueda.isEmpty &&
+                          filtroPatologia.value.isEmpty
                       ? '$desde–$hasta de $_total'
                       : '$desde–$hasta de $_total filtradas',
                   style: const TextStyle(fontSize: 12, color: AppColors.gray),
@@ -171,7 +186,41 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                   )),
             ],
           ),
-          const SizedBox(height: 12),
+          // Filtro llegado desde el tablero de patologías.
+          if (filtroPatologia.value.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(.10),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.warning.withOpacity(.4)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.medical_services_outlined,
+                        size: 17, color: AppColors.warning),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Mostrando familias con: ${filtroPatologia.value}',
+                        style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.warning),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => filtroPatologia.value = '',
+                      child: const Icon(Icons.close,
+                          size: 17, color: AppColors.warning),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           if (_cargando)
             const Padding(
@@ -202,13 +251,16 @@ class _TablaFamiliasState extends State<TablaFamilias> {
                   children: [
                     const Text('Sin resultados',
                         style: TextStyle(color: AppColors.gray)),
-                    if (_prioridad.isNotEmpty || _busqueda.isNotEmpty) ...[
+                    if (_prioridad.isNotEmpty ||
+                        _busqueda.isNotEmpty ||
+                        filtroPatologia.value.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       TextButton.icon(
                         onPressed: () => _filtrar(() {
                           _prioridad = '';
                           _busqueda = '';
                           _campoBusqueda.clear();
+                          filtroPatologia.value = '';
                         }),
                         icon: const Icon(Icons.filter_alt_off_outlined,
                             size: 17),

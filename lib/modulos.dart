@@ -1,15 +1,9 @@
-/// ═══════════════════════════════════════════════════════════
-/// FORMATO DEL FORMULARIO
+/// Qué formulario usa el asistente.
 ///
-/// El refugio pasó de levantar la "Planilla de ingreso de damnificados"
-/// (13 secciones sobre el daño de la vivienda, ayuda social y firmas) a
-/// levantar el CENSO DEL CAMPAMENTO MONUMENTAL, que es una fila por
-/// persona con datos de dotación y salud.
-///
-/// El censo es ahora el formato vigente. La planilla anterior queda en el
-/// código y se puede volver a activar cambiando `planillaDamnificados` a
-/// true: aparecería como pasos adicionales al final del asistente.
-/// ═══════════════════════════════════════════════════════════
+/// El refugio dejó la planilla de damnificados (13 secciones sobre daños,
+/// ayuda y firmas) y pasó al censo del campamento, que es una ficha por
+/// persona. La planilla sigue en el código por si vuelve a hacer falta:
+/// se reactiva con `planillaDamnificados` y aparece como pasos extra.
 class Modulos {
   Modulos._();
 

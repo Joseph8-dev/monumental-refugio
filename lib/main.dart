@@ -25,12 +25,53 @@ void main() async {
   runApp(const RefugioApp());
 }
 
-class RefugioApp extends StatelessWidget {
+/// Llave global del navegador: permite volver al login desde el servicio
+/// de red, que no tiene BuildContext.
+final GlobalKey<NavigatorState> navegadorApp = GlobalKey<NavigatorState>();
+
+class RefugioApp extends StatefulWidget {
   const RefugioApp({super.key});
+
+  @override
+  State<RefugioApp> createState() => _RefugioAppState();
+}
+
+class _RefugioAppState extends State<RefugioApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Si el servidor rechaza la sesión en cualquier pantalla, se va al
+    // login de inmediato en vez de dejar un "Reintentar" que no lleva a
+    // ninguna parte.
+    ApiService.sesionInvalida.addListener(_alExpirarSesion);
+  }
+
+  @override
+  void dispose() {
+    ApiService.sesionInvalida.removeListener(_alExpirarSesion);
+    super.dispose();
+  }
+
+  void _alExpirarSesion() {
+    final nav = navegadorApp.currentState;
+    if (nav == null) return;
+    nav.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (r) => false,
+    );
+    final ctx = navegadorApp.currentContext;
+    if (ctx != null) {
+      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+        content: Text('Su sesión expiró. Vuelva a iniciar sesión.'),
+        backgroundColor: AppColors.warning,
+      ));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navegadorApp,
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       // Español en los widgets de Material (selector de rango de fechas).

@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
+import '../models/bitacora.dart';
 import '../models/expediente.dart';
 
 class ApiException implements Exception {
@@ -12,7 +14,6 @@ class ApiException implements Exception {
 }
 
 /// CRUD contra el backend Node (Express + PostgreSQL).
-///
 /// Endpoints esperados (ver backend/refugio_routes.js incluido):
 ///   GET    /api/refugio/expedientes?search=&estatus=
 ///   GET    /api/refugio/expedientes/:id
@@ -36,6 +37,22 @@ class ApiService {
     final sp = await SharedPreferences.getInstance();
     token = sp.getString('rf_token') ?? '';
     rol = sp.getString('rf_rol') ?? 'recolector';
+  }
+
+  /// Se dispara cuando el servidor rechaza la sesión. La app la escucha
+  /// para mandar al login sin que el usuario tenga que adivinar.
+  static final ValueNotifier<int> sesionInvalida = ValueNotifier<int>(0);
+
+  static void sesionExpirada() {
+    if (token.isEmpty) return; // ya se estaba manejando
+    token = '';
+    rol = 'recolector';
+    SharedPreferences.getInstance().then((sp) {
+      sp.setBool('rf_logged_in', false);
+      sp.remove('rf_token');
+      sp.remove('rf_rol');
+    });
+    sesionInvalida.value++;
   }
 
   static Future<void> limpiarToken() async {
@@ -138,6 +155,39 @@ class ApiService {
     return (body['message'] ?? 'Reporte encolado.').toString();
   }
 
+  // ── Bitácora del refugio ──────────────────────────────────
+
+  Future<void> crearBitacora(RegistroBitacora r) async {
+    final res = await http
+        .post(_u('/bitacora'), headers: _h, body: jsonEncode(r.toJson()))
+        .timeout(_timeout);
+    _ok(res);
+  }
+
+  Future<({List<RegistroBitacora> items, int total})> listarBitacora({
+    String tipo = '',
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final q = <String, String>{'limit': '$limit', 'offset': '$offset'};
+    if (tipo.isNotEmpty) q['tipo'] = tipo;
+    final res =
+        await http.get(_u('/bitacora', q), headers: _h).timeout(_timeout);
+    final body = _ok(res);
+    final items = (body['data'] as List? ?? [])
+        .map((e) => RegistroBitacora.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+    final total = body['total'] is int ? body['total'] as int : items.length;
+    return (items: items, total: total);
+  }
+
+  Future<void> eliminarBitacora(int id) async {
+    final res = await http
+        .post(_u('/bitacora/$id/delete'), headers: _h)
+        .timeout(_timeout);
+    _ok(res);
+  }
+
   /// Métricas agregadas para el tablero administrativo.
   Future<Map<String, dynamic>> metricas() async {
     final res =
@@ -161,6 +211,7 @@ class ApiService {
     String search = '',
     String estatus = '',
     String prioridad = '',
+    String patologia = '',
     int limit = 10,
     int offset = 0,
   }) async {
@@ -168,6 +219,7 @@ class ApiService {
       'limit': '$limit',
       'offset': '$offset',
     };
+    if (patologia.isNotEmpty) q['patologia'] = patologia;
     if (search.trim().isNotEmpty) q['search'] = search.trim();
     if (estatus.isNotEmpty) q['estatus'] = estatus;
     if (prioridad.isNotEmpty) q['prioridad'] = prioridad;
@@ -242,10 +294,14 @@ class ApiService {
     } catch (_) {
       throw ApiException('Respuesta inválida del servidor (${res.statusCode})');
     }
+    // Sesión vencida o token inválido. Se limpia y se avisa a la app
+    // para que lleve al login: antes quedaba una pantalla con el botón
+    // "Reintentar" que volvía a fallar una y otra vez, sin salida.
     if (res.statusCode == 401) {
+      sesionExpirada();
       throw ApiException(
           body['message']?.toString() ??
-              'Sesion expirada. Cierre sesion y vuelva a entrar.');
+              'Su sesión expiró. Vuelva a iniciar sesión.');
     }
     if (res.statusCode >= 200 &&
         res.statusCode < 300 &&

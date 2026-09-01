@@ -3,7 +3,6 @@ import '../config.dart';
 import '../theme.dart';
 
 /// Logo institucional (Estadio Monumental).
-///
 /// El archivo es blanco con fondo transparente, por lo que SIEMPRE se
 /// muestra sobre Azul Medianoche (#041941), como exige el manual de
 /// identidad. Para cambiar el logo basta reemplazar assets/logo.png.

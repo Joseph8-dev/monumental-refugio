@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../datos.dart';
+import '../models/bitacora.dart';
 import '../models/expediente.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/bitacora_form.dart';
 import '../widgets/form_widgets.dart';
 import 'login_screen.dart';
 
@@ -34,7 +36,7 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
   /// cargada porque el estado de hoy (dentro/fuera, comidas) vive en
   /// memoria, no en la consulta al servidor.
   String _presencia = ''; // '' | 'dentro' | 'fuera'
-  // Ojo: no llamarlo _comida — ese nombre ya lo usa el método que marca
+  // no llamarlo _comida — ese nombre ya lo usa el método que marca
   // las comidas más abajo.
   String _filtroComida = ''; // '' | 'desayuno' | 'almuerzo' | 'cena'
 
@@ -156,6 +158,22 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
     }
   }
 
+  /// Registra una ayuda socioeconómica para esta familia. Se abre desde
+  /// su tarjeta porque la ayuda siempre tiene un destinatario concreto.
+  Future<void> _ayuda(Expediente x) async {
+    final ok = await mostrarFormularioBitacora(
+      context,
+      tipo: TipoBitacora.ayuda,
+      familia: x,
+    );
+    if (!ok || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Ayuda registrada para ${x.nombreResponsable}'),
+      backgroundColor: AppColors.ok,
+      duration: const Duration(seconds: 2),
+    ));
+  }
+
   Future<void> _salir() async {
     final sp = await SharedPreferences.getInstance();
     await sp.setBool('rf_logged_in', false);
@@ -223,6 +241,24 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
                 Text('Control de acceso y comidas · $hoy',
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, color: AppColors.ink)),
+                // Bitácora del turno: lo primero, porque es lo que el
+                // vigilante registra sin buscar a nadie.
+                Row(
+                  children: [
+                    _BotonBitacora(
+                      tipo: TipoBitacora.actividad,
+                      etiqueta: 'Actividad',
+                      onListo: _cargar,
+                    ),
+                    const SizedBox(width: 8),
+                    _BotonBitacora(
+                      tipo: TipoBitacora.incidencia,
+                      etiqueta: 'Incidencia / Novedad',
+                      onListo: _cargar,
+                    ),
+                  ],
+                ),
+                const Divider(height: 22),
                 Text(
                     'Vigilante: $_operador · $dentro dentro del refugio'
                     '${filtrando ? " · ${visibles.length} en el filtro" : ""}',
@@ -306,6 +342,7 @@ class _VigilanteScreenState extends State<VigilanteScreen> {
                                   cena: e['cena'] == true,
                                   onMovimiento: (v) => _movimiento(x, v),
                                   onComida: (t, v) => _comida(x, t, v),
+                                  onAyuda: () => _ayuda(x),
                                 );
                               },
                             ),
@@ -322,6 +359,7 @@ class _TarjetaVigilante extends StatelessWidget {
   final bool dentro, desayuno, almuerzo, cena;
   final ValueChanged<bool> onMovimiento;
   final void Function(String, bool) onComida;
+  final VoidCallback onAyuda;
 
   const _TarjetaVigilante({
     required this.exp,
@@ -331,6 +369,7 @@ class _TarjetaVigilante extends StatelessWidget {
     required this.cena,
     required this.onMovimiento,
     required this.onComida,
+    required this.onAyuda,
   });
 
   @override
@@ -445,6 +484,21 @@ class _TarjetaVigilante extends StatelessWidget {
                   onTap: () => onComida('cena', !cena)),
             ],
           ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onAyuda,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                foregroundColor: AppColors.ok,
+                side: BorderSide(color: AppColors.ok.withOpacity(.45)),
+              ),
+              icon: const Icon(Icons.volunteer_activism_outlined, size: 17),
+              label: const Text('Registrar ayuda socioeconómica',
+                  style: TextStyle(fontSize: 12.5)),
+            ),
+          ),
         ],
       ),
     );
@@ -521,6 +575,50 @@ class _Estado extends StatelessWidget {
             OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
           ],
         ],
+      ),
+    );
+  }
+}
+
+
+/// Botón de registro de bitácora. Abre el formulario y avisa al volver.
+class _BotonBitacora extends StatelessWidget {
+  final String tipo;
+  final String etiqueta;
+  final VoidCallback onListo;
+  const _BotonBitacora(
+      {required this.tipo, required this.etiqueta, required this.onListo});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = colorTipoBitacora(tipo);
+    return Expanded(
+      child: OutlinedButton(
+        onPressed: () async {
+          final ok = await mostrarFormularioBitacora(context, tipo: tipo);
+          if (!ok || !context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('${TipoBitacora.etiqueta(tipo)} registrada'),
+            backgroundColor: color,
+            duration: const Duration(seconds: 2),
+          ));
+          onListo();
+        },
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          side: BorderSide(color: color.withOpacity(.5)),
+          foregroundColor: color,
+        ),
+        child: Column(
+          children: [
+            Icon(iconoTipoBitacora(tipo), size: 19),
+            const SizedBox(height: 3),
+            Text(etiqueta,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 11, fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }

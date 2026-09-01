@@ -1,17 +1,11 @@
 import 'services/api_service.dart';
 
-/// ═══════════════════════════════════════════════════════════
-/// PERMISOS · único lugar para prender/apagar pantallas por perfil
+/// Qué pantallas ve cada perfil. Se cambia editando solo la matriz de
+/// abajo: la barra de navegación y los botones se arman a partir de ella.
 ///
-/// Para cambiar qué ve cada rol, edita SOLO el mapa `matriz` de abajo:
-/// agrega o quita una constante de la lista del rol. Nada más hay que
-/// tocar — la barra de navegación, el botón de "nuevo ingreso" y la
-/// pantalla inicial se arman solos a partir de esta matriz.
-///
-/// El servidor tiene la MISMA matriz (backend/permisos.js). La de aquí
-/// controla lo que se ve; la del servidor controla lo que se permite.
-/// Si cambias una, cambia la otra.
-/// ═══════════════════════════════════════════════════════════
+/// El servidor tiene la misma matriz en backend/permisos.js. Esta decide
+/// lo que se ve; la del servidor, lo que se permite. Hay que cambiar las
+/// dos.
 class Permiso {
   /// Tablero de reportes y métricas.
   static const dashboard = 'dashboard';

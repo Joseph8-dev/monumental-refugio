@@ -493,7 +493,6 @@ IconData iconoDeAlerta(ClaseAlerta c) {
 }
 
 /// Chip de alerta del expediente.
-///
 /// Azul = necesidad de atención (niños, adulto mayor, discapacidad,
 /// condición médica). Ámbar = falta cargar algo (fotos).
 /// El color y el icono distintos evitan que se confundan entre sí.
@@ -602,9 +601,7 @@ class FiltroFila extends StatelessWidget {
       );
 }
 
-// ═══════════════════════════════════════════════════════════
 // CÉDULA · nacionalidad + número, guardados como un solo valor
-// ═══════════════════════════════════════════════════════════
 
 /// Prefijos de cédula usados en Venezuela.
 const kNacionalidadesCedula = ['V', 'E', 'P'];
@@ -723,9 +720,7 @@ class _CedulaFieldState extends State<CedulaField> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
 // TELÉFONO · código de operadora + 7 dígitos
-// ═══════════════════════════════════════════════════════════
 
 /// Códigos válidos en Venezuela: móviles primero, luego los fijos más
 /// usados en la zona de procedencia de las familias.
@@ -858,7 +853,6 @@ class _TelefonoFieldState extends State<TelefonoField> {
 }
 
 /// Campo de estatura en metros con formato automático.
-///
 /// El operador teclea dígitos y el campo los acomoda solo: 170 → 1.70.
 /// Evita la mezcla de "1,70", "170", "1.7" que trae el censo en papel.
 class EstaturaField extends StatefulWidget {

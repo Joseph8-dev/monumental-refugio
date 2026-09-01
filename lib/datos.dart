@@ -1,21 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-/// ═══════════════════════════════════════════════════════════
-/// SEÑAL DE REFRESCO
-///
-/// Cada pantalla cargaba sus datos una sola vez y no se enteraba de lo
-/// que hacían las demás: al cambiar el estatus dentro de un expediente,
-/// la lista y el tablero seguían mostrando lo viejo hasta recargarlos a
-/// mano.
-///
-/// `Datos.cambiaron()` avisa a las pantallas abiertas de que hay que
-/// volver a consultar. Es a propósito simple: un contador que escuchan.
-///
-/// El parámetro `origen` evita que la pantalla que hizo el cambio se
-/// recargue a sí misma. Importa en Acceso: allí cada marca de comida ya
-/// se refleja al instante en pantalla, y una recarga completa por cada
-/// toque sería un viaje a la red innecesario y un parpadeo en la lista.
-/// ═══════════════════════════════════════════════════════════
+/// Aviso de que los datos cambiaron, para que las pantallas abiertas se
+/// recarguen. `origen` evita que la pantalla que hizo el cambio se
+/// recargue a sí misma: en Acceso el cambio ya se ve al instante y una
+/// recarga por cada toque sobra.
 class Datos {
   Datos._();
 

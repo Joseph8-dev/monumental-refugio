@@ -4,7 +4,6 @@ import '../services/api_service.dart';
 import '../theme.dart';
 
 /// Envío de reportes por correo.
-///
 /// El servidor genera el PDF/Excel y lo manda como adjunto; la app solo
 /// encola el pedido. Se recuerda el último correo usado para no tener que
 /// escribirlo cada vez.

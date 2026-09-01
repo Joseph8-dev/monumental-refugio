@@ -1,18 +1,10 @@
 import 'package:flutter/foundation.dart';
 
-/// ═══════════════════════════════════════════════════════════
-/// PLATAFORMA
+/// El mismo código compila para Android y para web, así que el tablero
+/// del navegador nunca se desincroniza del de la tablet.
 ///
-/// El mismo código compila para Android (APK del refugio) y para web
-/// (tablero público en GitHub Pages). No es una app aparte: así el
-/// tablero web nunca se desincroniza del de la tablet.
-///
-/// En web solo existe el perfil ADMINISTRADOR: el registro de personas y
-/// el control de acceso se hacen en el teléfono, junto a la familia y con
-/// cámara. Un recolector no tendría cómo tomar fotos ni marcar entradas
-/// desde un navegador, y exponer esas operaciones en una URL pública
-/// amplía la superficie de riesgo sin dar nada a cambio.
-/// ═══════════════════════════════════════════════════════════
+/// En web solo entra el administrador: registrar personas y marcar
+/// accesos se hace en el teléfono, con cámara y junto a la familia.
 class Plataforma {
   Plataforma._();
 

@@ -5,8 +5,8 @@ import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/form_widgets.dart';
-import '../plataforma.dart';
 import '../widgets/reportes_card.dart';
+import '../widgets/bitacora_panel.dart';
 import '../widgets/tabla_familias.dart';
 import 'login_screen.dart';
 
@@ -21,7 +21,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final VoidCallback _suscripcion;
   Map<String, dynamic>? _m;
   bool _cargando = true;
@@ -29,6 +29,12 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   late final AnimationController _anim = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 900));
+
+  late final TabController _tabs = TabController(length: 2, vsync: this);
+
+  // Para poder bajar hasta la lista de familias al tocar una patología.
+  final _scroll = ScrollController();
+  final _claveFamilias = GlobalKey();
 
   @override
   void initState() {
@@ -42,6 +48,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void dispose() {
     Datos.dejarDeEscuchar(_suscripcion);
+    _tabs.dispose();
+    _scroll.dispose();
     _anim.dispose();
     super.dispose();
   }
@@ -69,6 +77,21 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   int _i(dynamic v) => v is int ? v : int.tryParse('${v ?? 0}') ?? 0;
+
+  /// Lleva la vista hasta la lista de familias, para que al tocar una
+  /// patología se vea de una vez a quiénes corresponde.
+  void _irAFamilias() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _claveFamilias.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+        alignment: 0.05,
+      );
+    });
+  }
 
   Future<void> _salir() async {
     final ok = await showDialog<bool>(
@@ -123,6 +146,18 @@ class _DashboardScreenState extends State<DashboardScreen>
               icon: const Icon(Icons.logout_rounded)),
           SizedBox(width: ancho ? 20 : 4),
         ],
+        bottom: TabBar(
+          controller: _tabs,
+          labelColor: AppColors.blue,
+          unselectedLabelColor: AppColors.gray,
+          indicatorColor: AppColors.blue,
+          labelStyle: const TextStyle(
+              fontSize: 13.5, fontWeight: FontWeight.w700),
+          tabs: const [
+            Tab(icon: Icon(Icons.insights_outlined, size: 19), text: 'Resumen'),
+            Tab(icon: Icon(Icons.notes_outlined, size: 19), text: 'Bitácora'),
+          ],
+        ),
       ),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
@@ -143,12 +178,22 @@ class _DashboardScreenState extends State<DashboardScreen>
                       const SizedBox(height: 12),
                       OutlinedButton(
                           onPressed: _cargar, child: const Text('Reintentar')),
+                      const SizedBox(height: 6),
+                      TextButton(
+                          onPressed: _salir,
+                          child: const Text('Volver al inicio de sesión')),
                     ],
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _cargar,
-                  child: _contenido(),
+              : TabBarView(
+                  controller: _tabs,
+                  children: [
+                    RefreshIndicator(
+                      onRefresh: _cargar,
+                      child: _contenido(),
+                    ),
+                    const BitacoraPanel(),
+                  ],
                 ),
     );
   }
@@ -287,6 +332,14 @@ class _DashboardScreenState extends State<DashboardScreen>
           titulo: 'Patologías y condiciones de salud',
           datos: Map<String, dynamic>.from(m['patologias'] ?? {}),
           anim: _anim,
+          // Al tocar una patología se filtra la lista de familias y se
+          // baja hasta ella: el admin pasa del número a los nombres sin
+          // tener que buscarlos.
+          onTocar: (etiqueta) {
+            filtroPatologia.value =
+                filtroPatologia.value == etiqueta ? '' : etiqueta;
+            _irAFamilias();
+          },
         ),
 
         // Comidas de hoy
@@ -311,86 +364,12 @@ class _DashboardScreenState extends State<DashboardScreen>
 
         const ReportesCard(),
 
-        // Familias registradas.
-        //  · Web: tabla paginada, con ficha emergente al hacer clic.
-        //  · Teléfono: últimas 30 en texto (el listado completo tiene su
-        //    propia pestaña, así que aquí basta un vistazo).
-        // En ningún caso se envían fotos: en base64 harían crecer la
+        // Familias registradas: tabla paginada con ficha emergente, igual
+        // de 30 sin filtros, y al tocar una patología no había a dónde
+        // llevar al usuario.
+        // Nunca se envían fotos aquí: en base64 harían crecer la
         // respuesta a decenas de MB con cientos de expedientes.
-        if (Plataforma.esWeb)
-          const TablaFamilias()
-        else if ((m['ultimas_familias'] as List?)?.isNotEmpty == true)
-          _Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text('Últimas familias registradas',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.ink)),
-                    ),
-                    Text('${(m['ultimas_familias'] as List).length} de $total',
-                        style: const TextStyle(
-                            fontSize: 11.5, color: AppColors.gray)),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                ...(m['ultimas_familias'] as List).map((f) {
-                  final x = Map<String, dynamic>.from(f);
-                  final color = prioridadColor('${x['prioridad']}');
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 9),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 34,
-                          margin: const EdgeInsets.only(right: 10, top: 2),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${x['nombre']}'.isEmpty
-                                    ? '${x['codigo']}'
-                                    : '${x['nombre']}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              Text(
-                                'Cubículo ${x['apto'] == '' ? '—' : x['apto']}'
-                                ' · ${x['personas']} persona'
-                                '${x['personas'] == 1 ? '' : 's'}',
-                                style: const TextStyle(
-                                    fontSize: 11.5, color: AppColors.gray),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text('${x['prioridad']}',
-                            style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: color)),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
+        TablaFamilias(key: _claveFamilias),
     ];
 
     return LayoutBuilder(
@@ -502,11 +481,16 @@ class _Barras extends StatelessWidget {
   final Map<String, dynamic> datos;
   final Map<String, Color> colores;
   final Animation<double> anim;
+
+  /// Si se indica, cada barra se vuelve tocable y devuelve su etiqueta.
+  final void Function(String)? onTocar;
+
   const _Barras(
       {required this.titulo,
       required this.datos,
       required this.anim,
-      this.colores = const {}});
+      this.colores = const {},
+      this.onTocar});
 
   @override
   Widget build(BuildContext context) {
@@ -542,9 +526,16 @@ class _Barras extends StatelessWidget {
               style: const TextStyle(
                   fontWeight: FontWeight.w700, color: AppColors.ink)),
           const SizedBox(height: 12),
+          if (onTocar != null)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Text('Toque una condición para ver esas familias',
+                  style: TextStyle(fontSize: 11, color: AppColors.grayLight)),
+            ),
           ...entradas.map((e) {
             final color = colores[e.key] ?? AppColors.blue;
-            return Padding(
+            final seleccionada = filtroPatologia.value == e.key;
+            final fila = Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,6 +569,25 @@ class _Barras extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            );
+
+            if (onTocar == null) return fila;
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () => onTocar!(e.key),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: seleccionada
+                        ? AppColors.warning.withOpacity(.10)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 6, vertical: 2),
+                  child: fila,
+                ),
               ),
             );
           }),

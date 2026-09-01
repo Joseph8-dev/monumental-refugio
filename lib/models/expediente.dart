@@ -154,7 +154,6 @@ class Catalogos {
 }
 
 /// Edad calculada al día de hoy a partir de la fecha de nacimiento.
-///
 /// La edad guardada en el censo es una foto del día en que se levantó el
 /// dato: si solo se usara ese número, un niño de 17 seguiría contando como
 /// menor para siempre. Cuando hay fecha se recalcula; el número guardado
@@ -458,7 +457,6 @@ class Expediente {
           .trim();
 
   /// Alertas automáticas del expediente.
-  ///
   /// Se dividen en dos familias para que no se confundan entre sí:
   ///  · ATENCIÓN (azul): quién es esta familia y qué cuidados requiere
   ///    — niños, adultos mayores, discapacidad, enfermedad. NO es un

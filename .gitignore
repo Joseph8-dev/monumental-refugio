@@ -24,7 +24,12 @@ Thumbs.db
 # Node (scripts del backend)
 node_modules/
 
-# NUNCA subir secretos
+# Nunca subir secretos ni datos personales
 .env
 *.keystore
 *.jks
+# El censo trae cédulas, fechas de nacimiento y patologías de 190
+# personas. Fuera del repositorio.
+*.xlsx
+*.sql
+!backend/schema.sql

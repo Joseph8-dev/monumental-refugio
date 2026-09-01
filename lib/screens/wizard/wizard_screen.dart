@@ -9,12 +9,10 @@ import 'steps.dart';
 import 'steps_censo.dart';
 
 /// Asistente por pasos.
-///
 /// Formato vigente (Modulos.censoMonumental): el CENSO DEL CAMPAMENTO,
 /// que es una fila por persona en el Excel oficial:
 ///   1 Familia y ubicación · 2 Jefe/a de familia · 3 Integrantes ·
 ///   4 Foto y cierre.
-///
 /// Formato anterior (Modulos.planillaDamnificados): la planilla de
 /// damnificados de 13 secciones. Se conserva y puede reactivarse desde
 /// lib/modulos.dart; entonces sus pasos se agregan al final.

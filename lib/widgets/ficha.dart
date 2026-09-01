@@ -1,13 +1,8 @@
 import '../models/expediente.dart';
 
-/// ═══════════════════════════════════════════════════════════
-/// FICHA DEL EXPEDIENTE
-///
-/// Arma las líneas de resumen de un expediente. Vive aparte porque la
-/// usan dos pantallas: el detalle en el teléfono y la ventana emergente
-/// del tablero web. Si estuviera duplicada, una de las dos se quedaría
-/// atrás cada vez que se agregue un campo.
-/// ═══════════════════════════════════════════════════════════
+/// Arma el resumen de un expediente. Aparte porque lo usan el detalle
+/// del teléfono y la ficha emergente del tablero; duplicarlo dejaría uno
+/// de los dos atrás en cuanto se agregue un campo.
 
 String tri(dynamic v) => switch (v) {
       'si' => 'Sí',
